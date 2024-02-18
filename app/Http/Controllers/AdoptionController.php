@@ -96,7 +96,7 @@ class AdoptionController extends Controller
 
     public function getAdoptions()
     {
-        $adoptions = Adoption::all();
+        $adoptions = Adoption::query()->with('pet')->get();
         return $adoptions;
     }
 }
