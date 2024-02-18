@@ -83,10 +83,10 @@ class AdoptionController extends Controller
                 'email' => 'string|required',
                 'cpf' => 'string|required|max:15',
                 'obsertavions' => 'string|required',
-                'profile_id' => 'integer|required'
+                'pet_id' => 'integer|required'
             ]);
 
-            $adoption = Adoption::create($data);
+            $adoption = Adoption::create([...$data, 'status' => 'PENDENTE']);
 
             return $adoption;
         } catch (\Exception $exception) {
