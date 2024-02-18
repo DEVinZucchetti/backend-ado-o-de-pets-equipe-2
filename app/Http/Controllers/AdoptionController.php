@@ -132,6 +132,7 @@ class AdoptionController extends Controller
         // VINCULA O PET AO CLIENTE CRIADO
         $pet = Pet::find($adoption->pet_id);
         $pet->update(['client_id' => $client->id]);
+        $pet->save();
 
         return $client;
     }
