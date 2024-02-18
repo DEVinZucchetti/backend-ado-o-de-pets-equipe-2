@@ -129,7 +129,7 @@ class AdoptionController extends Controller
             'bonus' => true
         ]);
 
-        // VINCULA O PET AO CLIENTE CRIADO
+        // VINCULA O PET AO CLIENTE CRIADO E RETIRA ELE DA OPÇÃO DE PETS PARA SEREM ADOTADOS
         $pet = Pet::find($adoption->pet_id);
         $pet->update(['client_id' => $client->id]);
         $pet->save();
