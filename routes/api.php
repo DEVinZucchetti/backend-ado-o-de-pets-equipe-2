@@ -13,7 +13,7 @@ use App\Http\Controllers\VaccineController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('pets/adocao', [AdoptionController::class, 'index']);
-Route::get('pets/{id}', [AdoptionController::class, 'show']);
+Route::get('pets/{id}/adocao', [AdoptionController::class, 'show']);
 
 Route::post('login', [AuthController::class, 'store']);
 
