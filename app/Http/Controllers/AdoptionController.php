@@ -93,4 +93,10 @@ class AdoptionController extends Controller
             return $this->error($exception->getMessage(), Response::HTTP_BAD_REQUEST);
         }
     }
+
+    public function getAdoptions()
+    {
+        $adoptions = Adoption::all();
+        return $adoptions;
+    }
 }
