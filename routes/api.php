@@ -12,8 +12,12 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\VaccineController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::post('login', [AuthController::class, 'store']);
+Route::get('pets/adocao', [AdoptionController::class, 'index']);
+Route::post('pets/adocao', [AdoptionController::class, 'store']);
+Route::get('pets/{id}/adocao', [AdoptionController::class, 'show']);
 
+Route::middleware('auth:sanctum')->group(function () {
     //Route::post('races', [RaceController::class, 'store'])->middleware(['ability:create-races']);
     Route::get('races', [RaceController::class, 'index'])->middleware(['ability:get-races']);
     Route::post('races', [RaceController::class, 'store'])->middleware(['ability:create-races']);
@@ -32,7 +36,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('pets/export', [PetsReportController::class, 'export'])->middleware(['ability:export-pdf-pets']);
 
-
     Route::post('clients', [ClientController::class, 'store'])->middleware(['ability:create-clients']);
     Route::get('clients', [ClientController::class, 'index'])->middleware(['ability:get-clients']);
 
@@ -48,8 +51,3 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('users', [UserController::class, 'store'])->middleware(['ability:create-users']);
     Route::get('users', [UserController::class, 'index'])->middleware(['ability:create-users']);
 });
-
-Route::get('pets/adocao', [AdoptionController::class, 'index']);
-Route::get('pets/{id}', [AdoptionController::class, 'show']);
-
-Route::post('login', [AuthController::class, 'store']);
