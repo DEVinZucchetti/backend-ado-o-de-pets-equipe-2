@@ -99,13 +99,10 @@ class AdoptionController extends Controller
 
         $adoptions = Adoption::query()
             ->with('pet')
-            ->whereHas('pet', function ($query) use ($search) {
-                $query
-                    ->where('name', 'ilike', "%$search%")
-                    ->orWhere('email', 'ilike', "%$search%")
-                    ->orWhere('contact', 'ilike', "%$search%")
-                    ->orWhere('status', 'ilike', "%$search%");
-            });
+            ->where('name', 'ilike', "%$search%")
+            ->orWhere('email', 'ilike', "%$search%")
+            ->orWhere('contact', 'ilike', "%$search%")
+            ->orWhere('status', 'ilike', "%$search%");
 
         return $adoptions->get();
     }
