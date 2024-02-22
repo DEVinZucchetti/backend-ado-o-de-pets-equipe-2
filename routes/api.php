@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('pets/adocao', [AdoptionController::class, 'index']);
 Route::get('pets/{id}/adocao', [AdoptionController::class, 'show']);
+Route::post('pets/adocao', [AdoptionController::class, 'store']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -50,6 +51,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('users', [UserController::class, 'store'])->middleware(['ability:create-users']);
     Route::get('users', [UserController::class, 'index'])->middleware(['ability:create-users']);
+    Route::get('adoptions', [AdoptionController::class, 'getAdoptions']);
+
+
+
 });
 
 
