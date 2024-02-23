@@ -97,4 +97,41 @@ class AdoptionController extends Controller
         $adoptions = Adoption::query()->with('pet')->get();
         return $adoptions;
     }
+
+    public function approve(Request $request)
+    {
+        //ATUALIZA O STATUS DE ADOÇÃO PARA APROVADO
+        $data = $request->all();
+
+        $request->validate([
+            'adoption_id' => 'integer|required',
+        ]);
+
+        $adoption = Adoption::find($data['adoption_id']);
+
+        if (!$adoption) return $this->error('Dado não encontrado', Response::HTTP_NOT_FOUND);
+
+        // EFETIVO O CADASTRO DA PESSOA QUE TEM INTENÇÃO DE ADOTAR NO SISTEMA
+        $adoption->update(['status' => 'APROVADO']);
+        $adoption->save();
+
+        $people = People::create([
+            'name' => $adoption->name,
+            'email' => $adoption->email,
+            'contact' => $adoption->contact,
+            'cpf' => $adoption->cpf
+        ]);
+
+        $client = Client::create([
+            'people_id' => $people->id,
+            'bonus' => true
+        ]);
+
+        // VINCULA O PET AO CLIENTE CRIADO E RETIRA ELE DA OPÇÃO DE PETS PARA SEREM ADOTADOS
+        $pet = Pet::find($adoption->pet_id);
+        $pet->update(['client_id' => $client->id]);
+        $pet->save();
+
+        return $client;
+    }
 }
