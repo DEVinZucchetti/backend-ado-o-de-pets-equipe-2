@@ -21,6 +21,7 @@ class AdoptionController extends Controller
 
     public function store(Request $request)
     {
+
         try {
             $data = $request->all();
 
@@ -143,21 +144,24 @@ class AdoptionController extends Controller
         $description =  $request->input('description');
 
         $slugName = Str::of($description)->slug();
+
         $fileName = $slugName . '.' . $file->extension();
 
-        $path = Storage::disk('s3')->put('aulateste', $file);
+        $pathBucket = Storage::disk('s3')->put('documentos', $file);
 
-        $path = Storage::disk('s3')->url($fileName);
+        $fullPathFile = Storage::disk('s3')->url($pathBucket);
 
-        File::create(
+       $fileCreated = File::create(
             [
                 'name' => $fileName,
                 'size' => $file->getSize(),
                 'mime' => $file->extension(),
-                'url' => $path
+                'url' => $fullPathFile
             ]
         );
 
-        return ['message' => 'Arquivo criado com sucesso'];
+        return [
+            'message' => 'Arquivo criado com sucesso'
+        ];
     }
 }
