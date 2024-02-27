@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Adoption;
 use App\Models\Race;
 use App\Models\Pet;
 use App\Models\Specie;
+use App\Models\User;
 use Tests\TestCase;
 
 class AdoptionTest extends TestCase
@@ -164,6 +166,61 @@ class AdoptionTest extends TestCase
             'status' => 400,
             'errors' => [],
             'data' => []
+        ]);
+    }
+
+    public function test_user_can_get_all_adoptions(): void
+    {
+        $specie = Specie::factory()->create();
+        $race = Race::factory()->create();
+        $pet  = Pet::factory()->create(['race_id' => $race->id, 'specie_id' => $specie->id]);
+        Adoption::factory(10)->create(['pet_id' => $pet->id]);
+
+        $user = User::factory()->create(['profile_id' => 2, 'password' => '12345678']);
+
+        $response = $this->actingAs($user)->get('/api/adoptions');
+
+        $response->assertStatus(200)->assertJsonCount(10)->assertJsonStructure([
+            '*' => [
+                'id',
+                'name',
+                'contact',
+                'email',
+                'cpf',
+                'observations',
+                'pet_id',
+                'status',
+                'created_at',
+                'updated_at',
+            ]
+        ]);
+    }
+
+    public function test_user_can_get_adoptions_with_search(): void
+    {
+        $specie = Specie::factory()->create();
+        $race = Race::factory()->create();
+        $pet  = Pet::factory()->create(['race_id' => $race->id, 'specie_id' => $specie->id]);
+        Adoption::factory()->create(['name' => 'Caroline', 'pet_id' => $pet->id]);
+        Adoption::factory(5)->create(['pet_id' => $pet->id]);
+
+        $user = User::factory()->create(['profile_id' => 2, 'password' => '12345678']);
+
+        $response = $this->actingAs($user)->get('/api/adoptions?search=Caroline');
+
+        $response->assertStatus(200)->assertJsonCount(1)->assertJsonStructure([
+            '*' => [
+                'id',
+                'name',
+                'contact',
+                'email',
+                'cpf',
+                'observations',
+                'pet_id',
+                'status',
+                'created_at',
+                'updated_at',
+            ]
         ]);
     }
 }
