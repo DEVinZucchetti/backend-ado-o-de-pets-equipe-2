@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Adoption;
+use App\Models\People;
 use App\Models\Pet;
 use App\Models\Race;
 use App\Models\Specie;
@@ -93,6 +94,44 @@ class AdoptionIntegrationTest extends TestCase
                 'created_at',
                 'updated_at',
             ]
+        ]);
+
+        //aprovação de adoção com dados inválidos
+        $response = $this->actingAs($user)->post('/api/adoptions/realized', ['adoption_id' => 999]);
+
+        $response->assertStatus(404)->assertJson([
+            'message' => 'Dado não encontrado',
+            'status' => 404,
+            'errors' => [],
+            'data' => []
+        ]);
+
+        //aprovação de adoção
+        $adoption = Adoption::query()->first();
+
+        $this->assertDatabaseHas('adoptions', ['id' => $adoption->id, 'status' => 'PENDENTE']);
+        $response = $this->actingAs($user)->post('/api/adoptions/realized', ['adoption_id' => $adoption->id]);
+
+        /* Verifica a mudança de status */
+        $this->assertDatabaseHas('adoptions', ['id' => $adoption->id, 'status' => 'APROVADO']);
+
+        /* Verifica a criação da pessoa e do cliente */
+        $this->assertDatabaseHas('peoples', ['email' => $adoption->email, 'cpf' => $adoption->cpf]);
+        $people = People::query()->where(['cpf' => $adoption->cpf])->first();
+        $this->assertDatabaseHas('clients', ['people_id' => $people->id]);
+
+        /* Verifica se pet recebeu o id do cliente */
+        $people->load('client');
+        $this->assertDatabaseHas('pets', ['id' => $pet->id, 'client_id' => $people->client->id]);
+
+        /* Verifica se criou a solicitação com o id do cliente vinculado */
+        $this->assertDatabaseHas('solicitations_documents', ['client_id' =>  $people->client->id]);
+
+        $response->assertStatus(201);
+        $response->assertJson([
+            'id' => true,
+            'people_id' => true,
+            'bonus' => true
         ]);
     }
 }
