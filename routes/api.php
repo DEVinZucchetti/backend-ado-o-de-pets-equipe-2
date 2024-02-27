@@ -56,3 +56,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('adoptions', [AdoptionController::class, 'getAdoptions']);
     Route::post('adoptions/realized', [AdoptionController::class, 'approve']);
 });
+
+Route::post('upload', [AdoptionController::class, 'upload']);

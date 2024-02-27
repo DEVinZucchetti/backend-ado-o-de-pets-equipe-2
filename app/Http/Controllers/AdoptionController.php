@@ -7,10 +7,15 @@ use App\Models\Adoption;
 use App\Models\Client;
 use App\Models\People;
 use App\Models\Pet;
+use App\Models\File;
 use App\Traits\HttpResponses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+// STORAGE -> USADO PARA FAZER UPLOAD DE FILES
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Str;
+
 
 class AdoptionController extends Controller
 {
@@ -135,5 +140,32 @@ class AdoptionController extends Controller
         $pet->save();
 
         return $client;
+    }
+
+    public function upload(Request $request)
+    {
+
+
+        $file = $request->file('file');
+        $description = $request->input('description');
+
+        // CRIAR NOME AMIGAVEL DO ARQUIVO
+        $slugName = Str::of($description)->slug();
+        $fileName = $slugName . '.' . $file->extension();
+
+        // ENVIAR O ARQUIVO PARA AMAZON
+        $pathBucket = Storage::disk('s3')->put('aulateste', $file);
+
+        // DEVOLVE A URL DO ARQUIVO
+        $fullPathFile = Storage::disk('s3')->url($pathBucket);
+        // ENVIAR ARQUIVOS NO INSOMINIAC ATRAVES DE MULTIPART FORM
+        $fileCreated = File::create([
+            'name' => $fileName,
+            'size' => $file->getSize(),
+            'mime' => $file->extension(),
+            'url' => $fullPathFile
+        ]);
+
+        return ['message' => 'Arquivo criado com sucesso'];
     }
 }
