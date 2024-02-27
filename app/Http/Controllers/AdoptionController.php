@@ -8,8 +8,10 @@ use App\Models\Client;
 use App\Models\File;
 use App\Models\People;
 use App\Models\Pet;
+use App\Models\SolicitationDocument;
 use App\Traits\HttpResponses;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -103,48 +105,64 @@ class AdoptionController extends Controller
 
     public function approve(Request $request)
     {
-        // Atualiza o status da adoção para aprovado
-        $data = $request->all();
 
-        $request->validate([
-            'adoption_id' => 'integer|required',
-        ]);
+        try {
+            DB::beginTransaction();
 
-        $adoption = Adoption::find($data['adoption_id']);
+            // Atualiza o status da adoção para aprovado
+            $data = $request->all();
 
-        if (!$adoption)  return $this->error('Dado não encontrado', Response::HTTP_NOT_FOUND);
+            $request->validate([
+                'adoption_id' => 'integer|required',
+            ]);
 
-        $adoption->update(['status' => 'APROVADO']);
-        $adoption->save();
+            $adoption = Adoption::find($data['adoption_id']);
 
-        // efetivo o cadastro da pessoa que tem intenção de adotar no sistema
-        $people = People::create([
-            'name' => $adoption->name,
-            'email' => $adoption->email,
-            'cpf' => $adoption->cpf,
-            'contact' => $adoption->contact,
-        ]);
+            if (!$adoption)  return $this->error('Dado não encontrado', Response::HTTP_NOT_FOUND);
 
-        $client = Client::create([
-            'people_id' => $people->id,
-            'bonus' => true
-        ]);
+            $adoption->update(['status' => 'APROVADO']);
+            $adoption->save();
 
-        // vincula o pet com cliente criado
-        $pet = Pet::find($adoption->pet_id);
-        $pet->update(['client_id' => $client->id]);
-        $pet->save();
+            // efetivo o cadastro da pessoa que tem intenção de adotar no sistema
+            $people = People::create([
+                'name' => $adoption->name,
+                'email' => $adoption->email,
+                'cpf' => $adoption->cpf,
+                'contact' => $adoption->contact,
+            ]);
 
-        Mail::to($people->email, $people->name)
-            ->send(new SendDocuments($people->name));
+            $client = Client::create([
+                'people_id' => $people->id,
+                'bonus' => true
+            ]);
 
-        return $client;
+            // vincula o pet com cliente criado
+            $pet = Pet::find($adoption->pet_id);
+            $pet->update(['client_id' => $client->id]);
+            $pet->save();
+
+            $solicitation = SolicitationDocument::create([
+                'client_id' => $client->id
+            ]);
+
+            Mail::to($people->email, $people->name)
+                ->send(new SendDocuments($people->name, $solicitation->id));
+
+            DB::commit();
+
+            return $client;
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            return $this->error($exception->getMessage(), Response::HTTP_BAD_REQUEST);
+        }
     }
 
     public function upload(Request $request)
     {
         $file = $request->file('file');
         $description =  $request->input('description');
+        $key =  $request->input('key');
+        $id =  $request->input('id');
 
         $slugName = Str::of($description)->slug();
         $fileName = $slugName . '.' . $file->extension();
@@ -153,7 +171,7 @@ class AdoptionController extends Controller
 
         $fullPathFile = Storage::disk('s3')->url($fileName);
 
-        File::create(
+        $file = File::create(
             [
                 'name' => $fileName,
                 'size' => $file->getSize(),
@@ -161,6 +179,12 @@ class AdoptionController extends Controller
                 'url' => $fullPathFile
             ]
         );
+
+        $solicitation = SolicitationDocument::find($id);
+
+        if (!$solicitation) return $this->error('Dado não encontrado', Response::HTTP_NOT_FOUND);
+
+        $solicitation->update([$key => $file->id]);
 
         return ['message' => 'Arquivo criado com sucesso'];
     }
