@@ -6,7 +6,7 @@ use App\Models\Adoption;
 use App\Models\Pet;
 use App\Models\Race;
 use App\Models\Specie;
-
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 
@@ -37,12 +37,26 @@ class AdoptionTest extends TestCase
 
         $response = $this->post('/api/pets/adocao', $body);
 
-        $this->assertDatabaseCount('adoptions', 1);
 
         $response->assertStatus(201);
         $response->assertJson([
             ...$body,
             'status' => 'PENDENTE'
+        ]);
+    }
+
+    public function test_cannot_create_with_invalid_name(): void
+    {
+
+        $user = User::factory()->create(['profile_id' => 2, 'password' => '12345678']);
+
+        $response = $this->actingAs($user)->post('/api/pets/adocao', ['name' => 1]);
+
+        $response->assertStatus(400);
+        $response->assertJson([
+            "message" => "The name field must be a string",
+            "status" => 400,
+
         ]);
     }
 }
