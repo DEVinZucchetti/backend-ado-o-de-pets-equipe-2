@@ -87,7 +87,7 @@ class AdoptionController extends Controller
                 'contact' => 'string|required|max:20',
                 'email' => 'string|required',
                 'cpf' => 'string|required|max:15',
-                'obsertavions' => 'string|required',
+                'observations' => 'string|required',
                 'pet_id' => 'integer|required'
             ]);
 
