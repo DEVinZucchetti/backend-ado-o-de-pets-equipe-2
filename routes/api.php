@@ -54,6 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('users', [UserController::class, 'index'])->middleware(['ability:create-users']);
 
     Route::get('adoptions', [AdoptionController::class, 'getAdoptions']);
+
     Route::post('adoptions/realized', [AdoptionController::class, 'approve']);
 });
 
