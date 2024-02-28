@@ -37,7 +37,7 @@ class AdoptionTest extends TestCase
 
         $response = $this->post('/api/pets/adocao', $body);
 
-
+        $this->assertDatabaseCount('adoptions', 1);
 
         $response->assertStatus(201);
         $response->assertJson([
