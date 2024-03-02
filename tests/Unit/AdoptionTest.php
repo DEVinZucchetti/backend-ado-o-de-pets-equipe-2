@@ -111,6 +111,6 @@ class AdoptionTest extends TestCase
 
         $this->assertDatabaseHas('clients', ['people_id' => $people->id]);
 
-        $this->assertDatabaseHas('pets', ['id' => $pet->id, 'client_id' => $people->id]);
+        $this->assertDatabaseHas('pets', ['id' => $pet->id, 'client_id' => $people->client->id]);
     }
 }
