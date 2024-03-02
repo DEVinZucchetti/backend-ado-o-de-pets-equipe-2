@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Adoption;
+use App\Models\People;
 use App\Models\Pet;
 use App\Models\Race;
 use App\Models\Specie;
@@ -86,5 +87,30 @@ class AdoptionTest extends TestCase
                 'pet_id' => true,
             ]
         ]);
+    }
+    public function test_user_can_add_realized_adoption(): void
+    {
+        $specie = Specie::factory()->create();
+        $race = Race::factory()->create();
+        $pet  = Pet::factory()->create(['race_id' => $race->id, 'specie_id' => $specie->id]);
+
+        $adoption = Adoption::factory(5)->create(['pet_id' => $pet->id]);
+
+        $user = User::factory()->create(['profile_id' => 3, 'password' => '12345678']);
+
+        $this->assertDatabaseHas('adoptions', ['id' => $adoption->id, 'status' => 'PENDENTE']);
+
+        $response = $this->actingAs($user)->post('/api/adoptions/realized', ['adoption_id' => $adoption->id]);
+
+        $this->assertDatabaseHas('adoptions', ['id' => $adoption->id, 'status' => 'APROVADO']);
+
+        $this->assertDatabaseHas('peoples', ['email' => $adoption->email, 'cpf' => $adoption->cpf]);
+        $this->assertDatabaseCount('clients', 1);
+
+        $people = People::query()->where(['cpf' => $adoption->cpf])->first();
+
+        $this->assertDatabaseHas('clients', ['people_id' => $people->id]);
+
+        $this->assertDatabaseHas('pets', ['id' => $pet->id, 'client_id' => $people->id]);
     }
 }
