@@ -13,8 +13,8 @@ class People extends Model
 
     protected $fillable = ['name', 'cpf', 'email', 'contact'];
 
-    public function people()
+    public function client()
     {
-        return $this->hasOne(People::class, 'id', 'people_id');
+        return $this->hasOne(Client::class, 'people_id', 'id');
     }
 }
