@@ -111,4 +111,40 @@ class AdoptionController extends Controller
         return $adoptions->get();
     }
 
+    public function approve(Request $request) {
+
+        // ATT STATUS DE PENDENTE PARA APROVADO
+        $data = $request->all();
+
+        $request->validate([
+            'adoption_id' => 'integer|required'
+        ]);
+
+        $adoption = Adoption::find($data['adoption_id']);
+
+        if(!$adoption) return $this->error('Dado não encontrado', Response::HTTP_NOT_FOUND);
+
+        $adoption->update(['status' => 'APROVADO']);
+        $adoption->save();
+
+        // EFETIVA CADASTRO
+        $people = People::create([
+            'name' => $adoption->name,
+            'email' => $adoption->email,
+            'cpf' => $adoption->cpf,
+            'contact' => $adoption->contact
+        ]);
+
+        $client = Client::create([
+            'people_id' => $people->id,
+            'bonus' => true
+        ]);
+
+         // VINCULA PET/CLIENT
+        $pet = Pet::find($adoption->pet_id);
+        $pet->update(['client_id' => $client->id]);
+        $pet->save();
+
+        return $client;
+    }
 }
