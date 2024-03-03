@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('pets/adocao', [AdoptionController::class, 'index']);
 Route::get('pets/{id}/adocao', [AdoptionController::class, 'show']);
+Route::post('pets/adocao', [AdoptionController::class, 'store']);
 
 Route::post('login', [AuthController::class, 'store']);
 
