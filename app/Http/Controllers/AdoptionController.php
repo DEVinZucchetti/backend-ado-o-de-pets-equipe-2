@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Mail\SendWelcomePet;
 use App\Models\Adoption;
 use App\Models\Client;
+use App\Models\File;
 use App\Models\People;
 use App\Models\Pet;
 use App\Traits\HttpResponses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Stringable as Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class AdoptionController extends Controller
@@ -146,5 +149,24 @@ class AdoptionController extends Controller
         $pet->save();
 
         return $client;
+    }
+
+    public function upload(Request $request) {
+
+        $file = $request->file('file');
+
+            $description = $request->input('description');
+            $slugName = "\Illuminate\Support\Str::slug($description)";
+            $fileName =  $slugName . '.' . $file->extension();
+            $path = Storage::disk('s3')->put('testeaula', $file);
+            $path = Storage::disk('s3')->url($path);
+            $fileCreated = File::create([
+                'name' => $fileName,
+                'size' => $file->getSize(),
+                'mime' => $file->extension(),
+                'url' => $path
+            ]);
+
+            return $fileCreated;
     }
 }
