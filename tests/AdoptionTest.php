@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\Adoption;
+use App\Models\People;
 use App\Models\Pet;
 use App\Models\Race;
 use App\Models\Specie;
@@ -94,6 +95,46 @@ class AdoptionTest extends TestCase
                 'status' => true,
                 'pet_id' => true
             ]
+        ]);
+    }
+
+    public function test_use_can_add_realized_adoption(): void
+    {
+        $specie = Specie::factory()->create();
+        $race = Race::factory()->create();
+        $pet  = Pet::factory()->create(['race_id' => $race->id, 'specie_id' => $specie->id]);
+
+        $adoption = Adoption::factory()->create(['pet_id' => $pet->id]);
+
+        $user = User::factory()->create(['profile_id' => 3, 'password' => '12345678']);
+
+
+        $this->assertDatabaseHas('adoptions', ['id' => $adoption->id, 'status' => 'PENDENTE']);
+
+        $response = $this->actingAs($user)->post('/api/adoptions/realized', ['adoption_id' => $adoption->id]);
+
+        // Verifica a mudança de status
+        $this->assertDatabaseHas('adoptions', ['id' => $adoption->id, 'status' => 'APROVADO']);
+
+        // Verifica a criação da pessoa e do cliente
+        $this->assertDatabaseHas('peoples', ['email' => $adoption->email, 'cpf' => $adoption->cpf]);
+
+        $people = People::query()->where(['cpf' => $adoption->cpf])->first();
+
+        $this->assertDatabaseHas('clients', ['people_id' => $people->id]);
+
+        // Verifica se pet recebeu o id do cliente
+        $people->load('client');
+        $this->assertDatabaseHas('pets', ['id' => $pet->id, 'client_id' => $people->client->id]);
+
+        // Verifica se criou a solicitação com o id do cliente vinculado
+        $this->assertDatabaseHas('solicitations_documents', ['client_id' => $people->client->id]);
+
+        $response->assertStatus(201);
+        $response->assertJson([
+            'id' => true,
+            'people_id' => true,
+            'bonus' => true
         ]);
     }
 }
