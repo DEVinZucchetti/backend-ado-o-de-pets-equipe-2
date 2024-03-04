@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\SendDocumentsInvite;
 use App\Mail\SendWelcomePet;
 use App\Models\Adoption;
 use App\Models\Client;
@@ -147,6 +148,9 @@ class AdoptionController extends Controller
         $pet = Pet::find($adoption->pet_id);
         $pet->update(['client_id' => $client->id]);
         $pet->save();
+
+        Mail::to($people->email, $people->name)
+                ->send(new SendDocumentsInvite($people->name));
 
         return $client;
     }
