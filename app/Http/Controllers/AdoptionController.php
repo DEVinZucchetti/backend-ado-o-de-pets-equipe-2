@@ -171,6 +171,12 @@ class AdoptionController extends Controller
                 ]
             );
 
-        return ['message' => 'Arquivo criado com sucesso'];
+        return
+        [
+            'message' => 'Arquivo criado com sucesso',
+            'file_name' => $fileName,
+            'size' => $file->getSize(),
+            'mime' => $file->extension(),
+        ];
     }
 }
