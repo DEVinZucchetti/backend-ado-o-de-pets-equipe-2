@@ -12,7 +12,7 @@ use App\Traits\HttpResponses;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Stringable as Str;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class AdoptionController extends Controller
@@ -154,19 +154,23 @@ class AdoptionController extends Controller
     public function upload(Request $request) {
 
         $file = $request->file('file');
+        $description = $request->input('description');
 
-            $description = $request->input('description');
-            $slugName = "\Illuminate\Support\Str::slug($description)";
-            $fileName =  $slugName . '.' . $file->extension();
-            $path = Storage::disk('s3')->put('testeaula', $file);
-            $path = Storage::disk('s3')->url($path);
-            $fileCreated = File::create([
-                'name' => $fileName,
-                'size' => $file->getSize(),
-                'mime' => $file->extension(),
-                'url' => $path
-            ]);
+        $slugName = Str::of($description)->slug();
+        $fileName =  $slugName . '.' . $file->extension();
 
-            return $fileCreated;
+        $pathBucket = Storage::disk('s3')->put('documentos', $file);
+        $fullPathFile = Storage::disk('s3')->url($fileName);
+
+        $fileCreated = File::create(
+                [
+                    'name' => $fileName,
+                    'size' => $file->getSize(),
+                    'mime' => $file->extension(),
+                    'url' => $fullPathFile
+                ]
+            );
+
+        return ['message' => 'Arquivo criado com sucesso'];
     }
 }
