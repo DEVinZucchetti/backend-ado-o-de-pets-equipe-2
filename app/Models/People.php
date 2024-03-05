@@ -12,5 +12,8 @@ class People extends Model
     protected $table = "peoples";
 
     protected $fillable = ['name', 'cpf', 'email', 'contact'];
-
+    public function client()
+    {
+        return $this->hasOne(Client::class, 'people_id', 'id');
+    }
 }
